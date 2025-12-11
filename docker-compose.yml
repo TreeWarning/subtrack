@@ -7,38 +7,36 @@ services:
     container_name: subscription_db
     restart: always
     environment:
-      # These variables set up the database credentials
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: subscription_tracker_db
     ports:
-      - "5432:5432" # Maps database port to your local machine (optional)
+      - "5432:5432"
     volumes:
-      # CRUCIAL: This runs your schema.sql file automatically on first startup
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-      # Data persistence for the database
       - postgres_data:/var/lib/postgresql/data/
 
   # --- 2. Node.js Backend/API Service ---
   api:
     build:
-      context: . # Looks for a 'Dockerfile' in the current directory
+      context: .
     container_name: subscription_api
     restart: always
     ports:
-      - "3001:3001" # Exposes API port 3001 to your local machine
+      - "3001:3001"
     environment:
-      # This is how the API connects to the 'db' service
       PGUSER: user
       PGPASSWORD: password
       PGDATABASE: subscription_tracker_db
-      PGHOST: db # IMPORTANT: Uses the service name 'db' as the hostname
+      PGHOST: db
       PGPORT: 5432
     depends_on:
-      - db # Ensures the database starts before the API
+      - db
     volumes:
-      # Syncs your local code for development (your current directory to the container's working directory)
+      # 1. Mounts your source code (server.js, api.js) for live updates:
       - .:/usr/src/app 
+      # 2. FIX: Anonymous Volume to prevent host's node_modules from overriding the installed dependencies
+      - /usr/src/app/node_modules 
 
 volumes:
   postgres_data:
